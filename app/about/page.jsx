@@ -37,7 +37,7 @@ export default function About() {
             </h1>
 
             <p className="text-gray-600 text-lg leading-relaxed mb-10 max-w-xl">
-              Interior designwalla was established in 2015. Our goal is not just to
+              Interior designwalla was established in 2018. Our goal is not just to
               decorate homes, but to create spaces that improve your lifestyle
               and where you truly feel at peace.
             </p>
@@ -59,7 +59,7 @@ export default function About() {
             <div className="flex gap-12 pt-10 border-t border-gray-200">
               <div>
                 <div className="text-5xl font-bold text-[#132A13] flex items-center">
-                  <Counter value={100} />
+                  <Counter value={50} />
                   <span>+</span>
                 </div>
                 <p className="text-sm text-gray-500 font-medium mt-1 uppercase tracking-widest">
