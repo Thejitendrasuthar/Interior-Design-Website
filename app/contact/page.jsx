@@ -75,17 +75,17 @@ export default function Contact() {
               <ContactDetail
                 icon={<Mail size={22} />}
                 label="Email us"
-                value="hello@yourdomain.com"
+                value="ashapurainterior040@gmail.com"
               />
               <ContactDetail
                 icon={<Phone size={22} />}
                 label="Call us"
-                value="+91 98765 43210"
+                value="+91 9028702495"
               />
               <ContactDetail
                 icon={<MapPin size={22} />}
                 label="Visit us"
-                value="123 Design Street, Mumbai, MH"
+                value="Mumbai, India"
               />
             </div>
           </motion.div>

@@ -91,7 +91,7 @@ export default function About() {
 
             <div className="rounded-3xl overflow-hidden h-[500px] md:h-[600px] shadow-2xl rotate-2 hover:rotate-0 transition-transform duration-500">
               <img
-                src="/IMG_8905.JPG"
+                src="/InteriorDesignwalla.png"
                 alt="Interior"
                 className="w-full h-full object-cover"
               />

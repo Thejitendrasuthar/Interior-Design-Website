@@ -38,7 +38,7 @@ export default function Footer() {
                 </div>
               </Link>
               <Link
-                href="https://instagram.com"
+                href="https://www.instagram.com/ashapura.design?utm_source=qr&igsh=ajlkdnYycG9hZDhw"
                 target="_blank"
                 rel="noreferrer"
               >
@@ -46,7 +46,11 @@ export default function Footer() {
                   <Instagram size={20} />
                 </div>
               </Link>
-              <Link href="https://youtube.com" target="_blank" rel="noreferrer">
+              <Link
+                href="https://youtube.com/@ashapuradesigns?si=6iSwNgXY7l4yHbG5"
+                target="_blank"
+                rel="noreferrer"
+              >
                 <div className="w-10 h-10 border border-white/20 rounded-full flex items-center justify-center cursor-pointer hover:bg-red-600 transition-colors">
                   <Youtube size={20} />
                 </div>
@@ -134,7 +138,7 @@ export default function Footer() {
             <ul className="flex flex-col gap-4 opacity-70">
               <li className="flex items-start gap-3">
                 <MapPin size={20} className="shrink-0 text-white" />
-                <span>123 Design St, Interior City, State 45678</span>
+                <span>Mumbai, india</span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone size={20} className="shrink-0 text-white" />
@@ -142,7 +146,7 @@ export default function Footer() {
                   href="tel:+1234567890"
                   className="hover:text-white transition-colors"
                 >
-                  +1 (234) 567-890
+                  +91 9028702495
                 </a>
               </li>
               <li className="flex items-center gap-3">
@@ -151,7 +155,7 @@ export default function Footer() {
                   href="mailto:info@jsinterior.com"
                   className="hover:text-white transition-colors"
                 >
-                  info@jsinterior.com
+                  ashapurainterior040@gmail.com
                 </a>
               </li>
             </ul>
