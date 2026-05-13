@@ -40,7 +40,7 @@ export default function Portfolio() {
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex justify-between items-end mb-12">
           <h2 className="text-3xl font-semibold tracking-tight text-[#132A13]">
-            Our latest projects
+            Our Recent Works
           </h2>
           <Link
             href="/portfolio"
