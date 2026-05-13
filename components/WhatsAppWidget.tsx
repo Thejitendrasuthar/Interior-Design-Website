@@ -7,7 +7,7 @@ export default function WhatsAppWidget() {
       <Script src="https://elfsightcdn.com/platform.js" strategy="lazyOnload" />
 
       <div
-        className="elfsight-app-e054793e-906a-4c1e-bc3b-513162fa0c24 pointer-events-auto"
+        className="elfsight-app-02c8c599-0dfa-4814-872e-b36a83b73a1d pointer-events-auto"
         data-elfsight-app-lazy
       ></div>
     </div>
