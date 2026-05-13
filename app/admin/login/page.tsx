@@ -4,7 +4,7 @@ import { useState } from "react";
 
 // ✅ CHANGE YOUR CREDENTIALS HERE
 const ADMIN_USERNAME = "admin";
-const ADMIN_PASSWORD = "Tarun@1995";
+const ADMIN_PASSWORD = "Tarun#1995";
 
 export default function AdminLoginPage() {
   const [username, setUsername] = useState("");
@@ -21,9 +21,7 @@ export default function AdminLoginPage() {
 
     setTimeout(() => {
       if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-        // Set cookie
         document.cookie = `admin_auth=true; path=/; max-age=${60 * 60 * 24 * 7}`;
-        // Hard full-page redirect to /admin
         window.location.replace("/admin");
       } else {
         setError("Incorrect username or password. Please try again.");
@@ -104,6 +102,28 @@ export default function AdminLoginPage() {
         }
         .login-input:focus { border-color: #4F772D; background: #fff; }
         .login-input.has-toggle { padding-right: 46px; }
+
+        /* ── AUTOFILL FIX ──────────────────────────────────────────
+           Browser (Chrome/Safari/Edge) forces its own yellow/blue
+           background on autofilled inputs via :-webkit-autofill.
+           The only reliable fix is a very long box-shadow inset that
+           paints over the browser background, and forcing text color
+           with -webkit-text-fill-color (color alone won't work).
+        ─────────────────────────────────────────────────────────── */
+        .login-input:-webkit-autofill,
+        .login-input:-webkit-autofill:hover,
+        .login-input:-webkit-autofill:focus,
+        .login-input:-webkit-autofill:active {
+          /* Paints over the yellow/blue autofill background */
+          -webkit-box-shadow: 0 0 0px 1000px #fafafa inset !important;
+          box-shadow: 0 0 0px 1000px #fafafa inset !important;
+          /* Forces text to stay dark — 'color' is ignored during autofill */
+          -webkit-text-fill-color: #222 !important;
+          caret-color: #222;
+          border-color: #4F772D !important;
+          transition: background-color 99999s ease-in-out 0s; /* prevents flash */
+        }
+
         .toggle-pass {
           position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
           background: none; border: none; cursor: pointer;
