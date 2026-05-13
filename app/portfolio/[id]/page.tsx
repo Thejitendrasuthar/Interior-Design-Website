@@ -12,15 +12,14 @@ import {
   X,
 } from "lucide-react";
 import CTA from "@/components/CTA";
+import { cl } from "@/lib/cloudinary";
 
 // Skeleton component
 function Skeleton({ className }: { className?: string }) {
   return (
     <div
       className={`animate-pulse bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%] rounded-2xl ${className}`}
-      style={{
-        animation: "shimmer 1.5s infinite",
-      }}
+      style={{ animation: "shimmer 1.5s infinite" }}
     />
   );
 }
@@ -35,21 +34,14 @@ function ProjectSkeleton() {
         }
       `}</style>
       <div className="max-w-7xl mx-auto px-6">
-        {/* Back button skeleton */}
         <Skeleton className="h-4 w-36 mb-12 rounded-full" />
-
-        {/* Category + Title */}
         <div className="mb-12">
           <Skeleton className="h-4 w-24 mb-4 rounded-full" />
           <Skeleton className="h-14 w-2/3 mb-4 rounded-2xl" />
           <Skeleton className="h-10 w-1/3 mb-12 rounded-2xl" />
-          {/* Hero Image */}
           <Skeleton className="w-full h-[500px] md:h-[600px] rounded-3xl" />
         </div>
-
-        {/* Info Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-16 mb-24">
-          {/* Left card */}
           <div className="md:col-span-1 flex flex-col gap-6 p-8 bg-[#f8f9f8] rounded-3xl">
             {[1, 2, 3].map((i) => (
               <div key={i}>
@@ -59,15 +51,12 @@ function ProjectSkeleton() {
               </div>
             ))}
           </div>
-
-          {/* Right content */}
           <div className="md:col-span-2">
             <Skeleton className="h-8 w-48 mb-6 rounded-xl" />
             <Skeleton className="h-4 w-full mb-3 rounded-full" />
             <Skeleton className="h-4 w-full mb-3 rounded-full" />
             <Skeleton className="h-4 w-4/5 mb-3 rounded-full" />
             <Skeleton className="h-4 w-3/4 mb-10 rounded-full" />
-
             <Skeleton className="h-7 w-36 mb-6 rounded-xl" />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[1, 2, 3, 4].map((i) => (
@@ -76,8 +65,6 @@ function ProjectSkeleton() {
             </div>
           </div>
         </div>
-
-        {/* Gallery */}
         <div className="mb-24">
           <Skeleton className="h-8 w-28 mb-8 rounded-xl" />
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -107,7 +94,7 @@ export default function ProjectDetail({ params }) {
         if (docSnap.exists()) {
           setProject({ id: docSnap.id, ...docSnap.data() });
         } else {
-          setError("Document nahi mila. ID: " + resolvedParams.id);
+          setError("Project not found. ID: " + resolvedParams.id);
         }
       } catch (e) {
         console.error("Error:", e);
@@ -118,36 +105,24 @@ export default function ProjectDetail({ params }) {
     };
     fetchProject();
   }, [resolvedParams.id]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (activeIndex === null) return;
-
-      // CLOSE
-      if (e.key === "Escape") {
-        setActiveIndex(null);
-      }
-
-      // NEXT
-      if (e.key === "ArrowRight") {
+      if (e.key === "Escape") setActiveIndex(null);
+      if (e.key === "ArrowRight")
         setActiveIndex((prev) =>
           prev === project.gallery.length - 1 ? 0 : prev + 1,
         );
-      }
-
-      // PREV
-      if (e.key === "ArrowLeft") {
+      if (e.key === "ArrowLeft")
         setActiveIndex((prev) =>
           prev === 0 ? project.gallery.length - 1 : prev - 1,
         );
-      }
     };
-
     window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [activeIndex, project]);
+
   if (loading) return <ProjectSkeleton />;
 
   if (error || !project)
@@ -161,16 +136,13 @@ export default function ProjectDetail({ params }) {
           <div className="w-20 h-20 bg-[#f8f9f8] rounded-3xl flex items-center justify-center mx-auto mb-8">
             <X size={32} className="text-[#132A13]/30" />
           </div>
-
           <h2 className="text-3xl md:text-4xl font-bold text-[#132A13] mb-4">
             Project Not Found
           </h2>
-
           <p className="text-gray-500 text-lg mb-10 leading-relaxed">
             The project you are looking for might have been removed or the link
             is incorrect.
           </p>
-
           <button
             onClick={() => router.push("/portfolio")}
             className="inline-flex items-center gap-2 px-8 py-4 bg-[#132A13] text-white rounded-full hover:bg-[#132A13]/90 transition-all active:scale-95 shadow-lg shadow-black/10"
@@ -216,14 +188,23 @@ export default function ProjectDetail({ params }) {
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-12 text-[#132A13]">
             {project.title}
           </h1>
+
+          {/* ── HERO IMAGE
+              - eager load (above the fold, most important image)
+              - 1400px wide: covers full-bleed on any screen
+              - fetchpriority="high" tells browser to load this first
+          ── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="w-full h-[500px] md:h-[600px] rounded-3xl overflow-hidden shadow-sm"
           >
             <img
-              src={heroImg}
+              src={cl(heroImg, 1400)}
               alt={project.title}
+              fetchPriority="high"
+              loading="eager"
+              decoding="async"
               className="w-full h-full object-cover"
             />
           </motion.div>
@@ -295,9 +276,15 @@ export default function ProjectDetail({ params }) {
                   onClick={() => setActiveIndex(idx)}
                   className="rounded-2xl overflow-hidden h-64 cursor-pointer group shadow-sm"
                 >
+                  {/* ── GALLERY THUMBNAILS
+                      - 400px wide: grid column is ~25vw max, 400px is plenty
+                      - lazy: below the fold, load only when scrolled into view
+                  ── */}
                   <img
-                    src={imgUrl}
-                    alt={`Gallery ${idx}`}
+                    src={cl(imgUrl, 400)}
+                    alt={`Gallery ${idx + 1}`}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover group-hover:scale-110 transition duration-700"
                   />
                 </motion.div>
@@ -307,7 +294,10 @@ export default function ProjectDetail({ params }) {
         )}
       </div>
 
-      {/* Lightbox */}
+      {/* ── LIGHTBOX
+          - Full resolution (1800px) for the active image only
+          - Next/prev images NOT preloaded — fetched on demand
+      ── */}
       <AnimatePresence>
         {activeIndex !== null && (
           <motion.div
@@ -325,7 +315,7 @@ export default function ProjectDetail({ params }) {
               key={activeIndex}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              src={project.gallery[activeIndex]}
+              src={cl(project.gallery[activeIndex], 1800)}
               style={{
                 maxWidth: "95vw",
                 maxHeight: "80vh",
@@ -335,7 +325,7 @@ export default function ProjectDetail({ params }) {
                 borderRadius: 16,
               }}
               onClick={(e) => e.stopPropagation()}
-              alt={`Slide ${activeIndex}`}
+              alt={`Slide ${activeIndex + 1}`}
             />
 
             {/* CLOSE */}
@@ -344,10 +334,9 @@ export default function ProjectDetail({ params }) {
               whileTap={{ scale: 0.92 }}
               style={{ position: "fixed", top: 24, right: 24, zIndex: 10000 }}
               className="group flex items-center justify-center w-12 h-12 rounded-2xl 
-  bg-white/10 hover:bg-white/20 
-  border border-white/20 hover:border-white/40
-  backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.25)]
-  text-white transition-all duration-300"
+                bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/40
+                backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.25)]
+                text-white transition-all duration-300"
               onClick={(e) => {
                 e.stopPropagation();
                 setActiveIndex(null);
@@ -365,13 +354,12 @@ export default function ProjectDetail({ params }) {
                 whileHover={{ scale: 1.08 }}
                 whileTap={{ scale: 0.92 }}
                 className="group flex items-center justify-center
-    w-11 h-11 md:w-14 md:h-14 rounded-2xl
-    bg-gradient-to-br from-white/15 to-white/5
-    hover:from-white/25 hover:to-white/10
-    border border-white/20 hover:border-white/40
-    backdrop-blur-xl
-    shadow-[0_10px_40px_rgba(0,0,0,0.35)]
-    text-white transition-all duration-300"
+                  w-11 h-11 md:w-14 md:h-14 rounded-2xl
+                  bg-gradient-to-br from-white/15 to-white/5
+                  hover:from-white/25 hover:to-white/10
+                  border border-white/20 hover:border-white/40
+                  backdrop-blur-xl shadow-[0_10px_40px_rgba(0,0,0,0.35)]
+                  text-white transition-all duration-300"
                 onClick={(e) => {
                   e.stopPropagation();
                   handlePrev(e);
@@ -390,13 +378,12 @@ export default function ProjectDetail({ params }) {
                 whileHover={{ scale: 1.08 }}
                 whileTap={{ scale: 0.92 }}
                 className="group flex items-center justify-center
-    w-11 h-11 md:w-14 md:h-14 rounded-2xl
-    bg-gradient-to-br from-white/15 to-white/5
-    hover:from-white/25 hover:to-white/10
-    border border-white/20 hover:border-white/40
-    backdrop-blur-xl
-    shadow-[0_10px_40px_rgba(0,0,0,0.35)]
-    text-white transition-all duration-300"
+                  w-11 h-11 md:w-14 md:h-14 rounded-2xl
+                  bg-gradient-to-br from-white/15 to-white/5
+                  hover:from-white/25 hover:to-white/10
+                  border border-white/20 hover:border-white/40
+                  backdrop-blur-xl shadow-[0_10px_40px_rgba(0,0,0,0.35)]
+                  text-white transition-all duration-300"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleNext(e);

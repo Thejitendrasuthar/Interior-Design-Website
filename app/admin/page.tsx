@@ -96,50 +96,84 @@ function TagBadge({ tag }) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// IMAGE PICKER (URL + Upload — no crop)
+// CLOUDINARY UPLOAD — returns secure_url only, no local fallback
+// ═══════════════════════════════════════════════════════════════
+async function uploadToCloudinary(file) {
+  const fd = new FormData();
+  fd.append("file", file);
+  fd.append("upload_preset", CLOUDINARY_PRESET);
+
+  let res, data;
+  try {
+    res = await fetch(
+      `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`,
+      { method: "POST", body: fd },
+    );
+    data = await res.json();
+  } catch (networkErr) {
+    throw new Error("Network error — check your internet connection.");
+  }
+
+  // Read exact error from Cloudinary body (HTTP 400 = wrong/signed preset)
+  if (!res.ok || data.error) {
+    const reason = data?.error?.message || `HTTP ${res.status}`;
+    const hint =
+      res.status === 400
+        ? ` — Ensure preset "${CLOUDINARY_PRESET}" exists and is UNSIGNED in Cloudinary Dashboard → Settings → Upload → Upload Presets.`
+        : "";
+    throw new Error(reason + hint);
+  }
+
+  if (!data.secure_url) {
+    throw new Error("Cloudinary did not return a URL.");
+  }
+
+  return data.secure_url; // ✅ permanent Cloudinary URL
+}
+
+// Optimize Cloudinary URL — auto format (WebP/AVIF), quality, resize
+function cloudinaryOptimize(url, { width = 800, quality = "auto" } = {}) {
+  if (!url || !url.includes("cloudinary.com")) return url;
+  // Insert transformation params into the URL path
+  return url.replace(
+    "/upload/",
+    `/upload/f_auto,q_${quality},w_${width},c_limit/`,
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// IMAGE PICKER
 // ═══════════════════════════════════════════════════════════════
 function ImagePicker({ value, onChange, label = "Image" }) {
   const [tab, setTab] = useState("url");
   const [urlInput, setUrlInput] = useState(value || "");
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   const fileRef = useRef(null);
 
   useEffect(() => {
     if (tab === "url") setUrlInput(value || "");
   }, [value]);
 
-  const uploadToCloudinary = async (file) => {
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+
     setUploading(true);
+    setUploadError("");
+
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("upload_preset", CLOUDINARY_PRESET);
-      const res = await fetch(
-        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`,
-        { method: "POST", body: fd },
-      );
-      const data = await res.json();
-      if (data.secure_url) {
-        onChange(data.secure_url);
-        toast.success("Image uploaded successfully ✅");
-      } else {
-        const localUrl = URL.createObjectURL(file);
-        onChange(localUrl);
-        toast.success("Uploaded (local fallback) ✅");
-      }
-    } catch {
-      const localUrl = URL.createObjectURL(file);
-      onChange(localUrl);
+      const url = await uploadToCloudinary(file);
+      onChange(url);
+      toast.success("Image saved to Cloudinary ✅");
+    } catch (err) {
+      const msg = err.message || "Upload failed";
+      setUploadError(msg);
+      toast.error("Upload failed: " + msg);
     } finally {
       setUploading(false);
     }
-  };
-
-  const onFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    uploadToCloudinary(file);
-    e.target.value = "";
   };
 
   const s = {
@@ -217,24 +251,27 @@ function ImagePicker({ value, onChange, label = "Image" }) {
             type="file"
             accept="image/*"
             style={{ display: "none" }}
-            onChange={onFileChange}
+            onChange={handleFileChange}
           />
           <button
             type="button"
-            onClick={() => fileRef.current?.click()}
+            onClick={() => {
+              setUploadError("");
+              fileRef.current?.click();
+            }}
             disabled={uploading}
             style={{
               width: "100%",
-              border: "2px dashed #c8e6c9",
+              border: `2px dashed ${uploadError ? "#c62828" : "#c8e6c9"}`,
               borderRadius: 12,
               padding: "24px 16px",
-              background: "#f9fdf9",
+              background: uploadError ? "#fff8f8" : "#f9fdf9",
               cursor: uploading ? "not-allowed" : "pointer",
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
               gap: 8,
-              color: "#4F772D",
+              color: uploadError ? "#c62828" : "#4F772D",
               fontWeight: 600,
               fontSize: 13,
             }}
@@ -251,14 +288,22 @@ function ImagePicker({ value, onChange, label = "Image" }) {
                     animation: "spin 0.8s linear infinite",
                   }}
                 />
-                <span>Uploading...</span>
+                <span>Uploading to Cloudinary...</span>
+              </>
+            ) : uploadError ? (
+              <>
+                <span style={{ fontSize: 28 }}>⚠️</span>
+                <span>Upload failed — please try again</span>
+                <span style={{ fontSize: 11, fontWeight: 400 }}>
+                  {uploadError}
+                </span>
               </>
             ) : (
               <>
                 <Upload size={28} />
-                <span>Click to choose image</span>
+                <span>Click to choose an image</span>
                 <span style={{ fontSize: 11, color: "#aaa", fontWeight: 400 }}>
-                  JPG, PNG, WEBP — full image uploaded as-is
+                  JPG, PNG, WEBP — permanently saved to Cloudinary
                 </span>
               </>
             )}
@@ -276,8 +321,9 @@ function ImagePicker({ value, onChange, label = "Image" }) {
           }}
         >
           <img
-            src={value}
+            src={cloudinaryOptimize(value, { width: 800 })}
             alt=""
+            loading="lazy"
             style={{
               width: "100%",
               height: 140,
@@ -290,9 +336,28 @@ function ImagePicker({ value, onChange, label = "Image" }) {
                 "https://placehold.co/400x140/e8f5e9/1b5e20?text=Invalid+URL";
             }}
           />
+          {/* Cloudinary URL badge */}
+          {value.includes("cloudinary.com") && (
+            <div
+              style={{
+                position: "absolute",
+                bottom: 8,
+                left: 8,
+                background: "rgba(0,0,0,0.65)",
+                color: "#4ade80",
+                fontSize: 10,
+                fontWeight: 700,
+                padding: "3px 8px",
+                borderRadius: 6,
+                letterSpacing: "0.04em",
+              }}
+            >
+              ☁️ CLOUDINARY — PERMANENT
+            </div>
+          )}
           <button
             type="button"
-            title="Remove image"
+            title="Image hatao"
             onClick={() => {
               onChange("");
               setUrlInput("");
@@ -324,41 +389,34 @@ function ImagePicker({ value, onChange, label = "Image" }) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// GALLERY PICKER (no crop)
+// GALLERY PICKER
 // ═══════════════════════════════════════════════════════════════
 function GalleryPicker({ gallery, onChange }) {
   const [urlInput, setUrlInput] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   const fileRef = useRef(null);
 
-  const uploadToCloudinary = async (file) => {
-    const fd = new FormData();
-    fd.append("file", file);
-    fd.append("upload_preset", CLOUDINARY_PRESET);
-    try {
-      const res = await fetch(
-        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`,
-        { method: "POST", body: fd },
-      );
-      const data = await res.json();
-      return data.secure_url || URL.createObjectURL(file);
-    } catch {
-      return URL.createObjectURL(file);
-    }
-  };
-
-  const onFileChange = async (e) => {
+  const handleFilesChange = async (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
+    e.target.value = "";
+
     setUploading(true);
+    setUploadError("");
+
     try {
+      // Sabhi files ko Cloudinary par upload karo
       const urls = await Promise.all(files.map((f) => uploadToCloudinary(f)));
       onChange([...gallery, ...urls]);
-      toast.success(`${urls.length} image(s) uploaded ✅`);
+      toast.success(`${urls.length} image(s) saved to Cloudinary ✅`);
+    } catch (err) {
+      const msg = err.message || "Upload failed";
+      setUploadError(msg);
+      toast.error("Gallery upload failed: " + msg);
     } finally {
       setUploading(false);
     }
-    e.target.value = "";
   };
 
   const addUrl = () => {
@@ -431,22 +489,25 @@ function GalleryPicker({ gallery, onChange }) {
           accept="image/*"
           multiple
           style={{ display: "none" }}
-          onChange={onFileChange}
+          onChange={handleFilesChange}
         />
         <button
           type="button"
-          onClick={() => fileRef.current?.click()}
+          onClick={() => {
+            setUploadError("");
+            fileRef.current?.click();
+          }}
           disabled={uploading}
           style={{
-            border: "2px dashed #c8e6c9",
+            border: `2px dashed ${uploadError ? "#c62828" : "#c8e6c9"}`,
             borderRadius: 10,
             padding: "10px 16px",
-            background: "#f9fdf9",
+            background: uploadError ? "#fff8f8" : "#f9fdf9",
             cursor: uploading ? "not-allowed" : "pointer",
             display: "flex",
             alignItems: "center",
             gap: 8,
-            color: "#4F772D",
+            color: uploadError ? "#c62828" : "#4F772D",
             fontWeight: 600,
             fontSize: 12,
             width: "100%",
@@ -464,12 +525,17 @@ function GalleryPicker({ gallery, onChange }) {
                   animation: "spin 0.8s linear infinite",
                 }}
               />
-              Uploading...
+              Uploading to Cloudinary... please wait
+            </>
+          ) : uploadError ? (
+            <>
+              <span>⚠️</span>
+              Upload failed — please try again ({uploadError})
             </>
           ) : (
             <>
               <Upload size={16} />
-              Upload photos (multi-select — full images, no crop)
+              Upload photos (multi-select — permanently saved to Cloudinary)
             </>
           )}
         </button>
@@ -487,8 +553,9 @@ function GalleryPicker({ gallery, onChange }) {
           {gallery.map((g, i) => (
             <div key={i} style={{ position: "relative" }}>
               <img
-                src={g}
+                src={cloudinaryOptimize(g, { width: 240 })}
                 alt=""
+                loading="lazy"
                 style={{
                   width: "100%",
                   height: 80,
@@ -497,6 +564,24 @@ function GalleryPicker({ gallery, onChange }) {
                   display: "block",
                 }}
               />
+              {/* Cloudinary badge on thumbnails */}
+              {g.includes("cloudinary.com") && (
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: 2,
+                    left: 2,
+                    background: "rgba(0,0,0,0.6)",
+                    color: "#4ade80",
+                    fontSize: 8,
+                    fontWeight: 700,
+                    padding: "2px 5px",
+                    borderRadius: 4,
+                  }}
+                >
+                  ☁️
+                </div>
+              )}
               <button
                 type="button"
                 onClick={() => onChange(gallery.filter((_, j) => j !== i))}
@@ -570,7 +655,7 @@ export default function App() {
 
   const handleSave = async () => {
     if (!form.title.trim() || !form.img.trim()) {
-      showToast("Title and Hero Image are necessary!", "error");
+      showToast("Title and Hero Image are required!", "error");
       return;
     }
     setSaving(true);
@@ -821,7 +906,7 @@ export default function App() {
               Delete Project?
             </h3>
             <p style={{ color: "#777", fontSize: 14, margin: "0 0 24px" }}>
-              This action is permanent and will remove data from Firebase.
+              This action is permanent and will remove the data from Firebase.
             </p>
             <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
               <button style={s.outBtn} onClick={() => setDeleteId(null)}>
@@ -832,7 +917,7 @@ export default function App() {
                 onClick={handleDelete}
                 disabled={saving}
               >
-                {saving ? "Deleting..." : "Delete now"}
+                {saving ? "Deleting..." : "Delete Now"}
               </button>
             </div>
           </div>
@@ -864,8 +949,9 @@ export default function App() {
             }}
           >
             <img
-              src={previewProject.img}
+              src={cloudinaryOptimize(previewProject.img, { width: 1200 })}
               alt=""
+              loading="eager"
               style={{
                 width: "100%",
                 height: 280,
@@ -942,8 +1028,9 @@ export default function App() {
                   {previewProject.gallery.map((g, i) => (
                     <img
                       key={i}
-                      src={g}
+                      src={cloudinaryOptimize(g, { width: 300 })}
                       alt=""
+                      loading="lazy"
                       style={{
                         width: "100%",
                         height: 100,
@@ -1022,7 +1109,7 @@ export default function App() {
             <div style={{ textAlign: "center", padding: 80 }}>
               <div style={{ fontSize: 48, marginBottom: 12 }}>🏠</div>
               <p style={{ color: "#aaa", fontSize: 16, marginBottom: 20 }}>
-                No projects found. Add your first!
+                No projects found. Add your first one!
               </p>
               <button style={s.btn()} onClick={() => setView("form")}>
                 + Add Project
@@ -1034,8 +1121,9 @@ export default function App() {
                 <div key={p.id} style={s.card}>
                   <div style={{ position: "relative" }}>
                     <img
-                      src={p.img}
+                      src={cloudinaryOptimize(p.img, { width: 600 })}
                       alt={p.title}
+                      loading="lazy"
                       style={{
                         width: "100%",
                         height: 180,

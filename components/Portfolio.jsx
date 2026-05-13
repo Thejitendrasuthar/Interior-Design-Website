@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { cl } from "@/lib/cloudinary";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 40 },
@@ -21,7 +22,7 @@ export default function Portfolio() {
         const q = query(
           collection(db, "portfolio"),
           orderBy("createdAt", "desc"),
-          limit(3), // sirf 3 latest projects
+          limit(3),
         );
         const snap = await getDocs(q);
         setProjects(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
@@ -50,7 +51,6 @@ export default function Portfolio() {
         </div>
 
         {loading ? (
-          // Skeleton loading
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[1, 2, 3].map((i) => (
               <div key={i} className="animate-pulse">
@@ -62,7 +62,7 @@ export default function Portfolio() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {projects.map((project) => (
+            {projects.map((project, i) => (
               <Link key={project.id} href={`/portfolio/${project.id}`}>
                 <motion.div
                   initial="hidden"
@@ -73,11 +73,13 @@ export default function Portfolio() {
                 >
                   <div className="rounded-3xl overflow-hidden relative mb-6 aspect-[4/3] md:h-64">
                     <img
-                      src={project.img}
+                      src={cl(project.img, 600)}
                       alt={project.title}
+                      // first card is likely above the fold — load eagerly
+                      loading={i === 0 ? "eager" : "lazy"}
+                      decoding="async"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     />
-                    {/* Arrow Icon */}
                     <div className="absolute top-4 right-4 w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                       <ArrowUpRight size={20} className="text-[#132A13]" />
                     </div>
