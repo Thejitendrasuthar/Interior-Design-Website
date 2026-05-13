@@ -4,7 +4,7 @@ import { useState } from "react";
 
 // ✅ CHANGE YOUR CREDENTIALS HERE
 const ADMIN_USERNAME = "admin";
-const ADMIN_PASSWORD = "portfolio@2024";
+const ADMIN_PASSWORD = "Tarun@1995";
 
 export default function AdminLoginPage() {
   const [username, setUsername] = useState("");
@@ -215,7 +215,7 @@ export default function AdminLoginPage() {
             </button>
           </form>
 
-          <p className="login-footer">Interior Design Portfolio © 2024</p>
+          <p className="login-footer">InteriorDesignWalla © 2026</p>
         </div>
       </div>
     </>
