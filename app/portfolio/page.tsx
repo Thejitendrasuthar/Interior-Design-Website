@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { cl } from "@/lib/cloudinary";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 40 },
@@ -120,10 +121,7 @@ export default function Portfolio() {
             className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-8"
           >
             {projects.map((project) => (
-              <Link
-                key={project.id}
-                href={`/portfolio/${project.id}`}
-              >
+              <Link key={project.id} href={`/portfolio/${project.id}`}>
                 <motion.div
                   // @ts-ignore
                   variants={fadeInUp}
@@ -131,7 +129,7 @@ export default function Portfolio() {
                 >
                   <div className="rounded-3xl overflow-hidden h-72 mb-6 relative">
                     <img
-                      src={project.img}
+                      src={cl(project.img, 600)}
                       alt={project.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     />
