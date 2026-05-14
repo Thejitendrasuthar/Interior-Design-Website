@@ -34,14 +34,23 @@ export default function Contact() {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-[#fafaf9] selection:bg-[#132A13] selection:text-white">
+      <style>{`
+        .contact-input:-webkit-autofill,
+        .contact-input:-webkit-autofill:hover,
+        .contact-input:-webkit-autofill:focus,
+        .contact-input:-webkit-autofill:active {
+          -webkit-box-shadow: 0 0 0 1000px #f9fafb inset !important;
+          -webkit-text-fill-color: #132A13 !important;
+          caret-color: #132A13;
+          transition: background-color 9999s ease-in-out 0s;
+        }
+      `}</style>{" "}
       {/* --- BACKGROUND DECORATION --- */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-[#132A13]/5 blur-[120px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-[#132A13]/10 blur-[120px]" />
       </div>
-
       <Toaster position="bottom-center" />
-
       <div className="max-w-7xl mx-auto px-6 pt-32 pb-24 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           {/* --- LEFT SIDE: CONTENT --- */}
@@ -175,7 +184,7 @@ function FloatingInput({ label, name, type, placeholder }) {
         name={name}
         required
         placeholder={placeholder}
-        className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-[#132A13] focus:ring-2 focus:ring-[#132A13]/20 transition-all outline-none"
+        className="contact-input w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-[#132A13] focus:ring-2 focus:ring-[#132A13]/20 transition-all outline-none"
       />
     </div>
   );

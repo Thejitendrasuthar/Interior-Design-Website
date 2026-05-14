@@ -110,7 +110,7 @@ export default function FAQ() {
             <div className="mt-auto border-t border-[#132A13]/10 pt-8 flex items-center gap-6">
               <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-lg border-2 border-white">
                 <img
-                  src="/IMG_8905.JPG"
+                  src="/InteriorDesignwalla.png"
                   className="w-full h-full object-cover"
                   alt="Interior"
                 />
