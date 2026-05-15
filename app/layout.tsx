@@ -5,7 +5,7 @@ import WhatsAppWidget from "@/components/WhatsAppWidget";
 import { headers } from "next/headers";
 
 export const metadata = {
-  title: "Interior designwalla",
+  title: "Interior DesignWalla",
   description: "Premium Interior Design for Modern Homes",
   icons: {
     icon: "https://framerusercontent.com/images/fNCAHGamGdHb8NnhNH6TCD49o.png",

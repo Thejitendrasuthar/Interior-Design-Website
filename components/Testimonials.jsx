@@ -61,7 +61,7 @@ export default function Testimonials() {
       quote:
         "Interior designwalla made our new home look like a palace. Their attention to detail and execution were simply amazing.",
       name: "Jitendra Suthar",
-      title: "Homeowner, Mumbai",
+      title: "Homeowner, Jalore",
       img: "/IMG_8905.JPG",
     },
     {
